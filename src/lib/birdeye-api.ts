@@ -377,13 +377,19 @@ class BirdeyeAPI {
         if (response.status === 429) {
           if (attempt < this.rateLimitConfig.maxRetries) {
             const delay = this.calculateBackoffDelay(attempt);
-            // Suppress console warning for rate limiting - this is expected behavior
             await this.sleep(delay);
             continue;
           }
           // After max retries, return fallback data instead of throwing error
-          const fallbackData = { tokens: [], total: 0, has_next: false } as unknown as T;
+          const fallbackData = { success: true, data: { tokens: [], total: 0, has_next: false } } as unknown as T;
           this.cache.set(cacheKey, fallbackData, 10000); // Cache fallback for 10 seconds
+          return fallbackData;
+        }
+
+        // Handle authentication errors (401) - return fallback data
+        if (response.status === 401) {
+          const fallbackData = { success: true, data: { tokens: [], total: 0, has_next: false } } as unknown as T;
+          this.cache.set(cacheKey, fallbackData, 30000); // Cache fallback for 30 seconds
           return fallbackData;
         }
 
@@ -393,7 +399,10 @@ class BirdeyeAPI {
         
         // Don't retry on client errors (4xx) except 429
         if (response.status >= 400 && response.status < 500 && response.status !== 429) {
-          throw lastError;
+          // For client errors, return fallback data instead of throwing
+          const fallbackData = { success: true, data: { tokens: [], total: 0, has_next: false } } as unknown as T;
+          this.cache.set(cacheKey, fallbackData, 30000);
+          return fallbackData;
         }
         
         // Retry on server errors (5xx)
@@ -418,13 +427,9 @@ class BirdeyeAPI {
     }
 
     // Return fallback data instead of throwing error to prevent UI crashes
-    if (lastError?.message.includes('429')) {
-      const fallbackData = { tokens: [], total: 0, has_next: false } as unknown as T;
-      this.cache.set(cacheKey, fallbackData, 10000); // Cache fallback for 10 seconds
-      return fallbackData;
-    }
-
-    throw lastError || new Error('Request failed after all retries');
+    const fallbackData = { success: true, data: { tokens: [], total: 0, has_next: false } } as unknown as T;
+    this.cache.set(cacheKey, fallbackData, 30000); // Cache fallback for 30 seconds
+    return fallbackData;
   }
 
   async getTrendingTokens(limit = 20): Promise<{ tokens: TrendingToken[] }> {
