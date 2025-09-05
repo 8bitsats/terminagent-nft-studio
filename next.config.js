@@ -7,6 +7,8 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  productionBrowserSourceMaps: false,
+  optimizeFonts: false,
   allowedDevOrigins: ["*.preview.same-app.com"],
   images: {
     unoptimized: true,
@@ -56,8 +58,16 @@ const nextConfig = {
         assert: false,
         os: false,
         path: false,
+        'pino-pretty': false,
       };
     }
+    
+    // Handle pino-pretty module resolution
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      'pino-pretty': false,
+    };
+
     return config;
   },
 };
