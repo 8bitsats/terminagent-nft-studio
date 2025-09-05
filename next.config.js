@@ -8,7 +8,6 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   productionBrowserSourceMaps: false,
-  optimizeFonts: false,
   allowedDevOrigins: ["*.preview.same-app.com"],
   images: {
     unoptimized: true,

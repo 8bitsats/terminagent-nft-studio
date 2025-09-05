@@ -23,11 +23,10 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 
 import {
+  birdeyeAPI,
   type TokenMarketData,
   type TokenMetadata,
-  type TokenOverview,
   type Trade,
-  birdeyeAPI,
 } from '@/lib/birdeye-api';
 import {
   formatNumber,
@@ -64,7 +63,7 @@ export default function TokenDetailPage() {
 
         setTokenMetadata(metadata);
         setMarketData(market);
-        setRecentTrades(trades.items);
+        setRecentTrades(trades?.items || []);
       } catch (err) {
         console.error('Failed to load token data:', err);
         setError('Failed to load token data. Please try again.');
@@ -360,7 +359,7 @@ export default function TokenDetailPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {recentTrades.length > 0 ? (
+                    {recentTrades && recentTrades.length > 0 ? (
                       recentTrades.map((trade, index) => (
                         <tr key={`${trade.txHash}-${index}`} className="border-b border-gray-100 dark:border-gray-700/50">
                           <td className="py-3 text-gray-600 dark:text-gray-400">
