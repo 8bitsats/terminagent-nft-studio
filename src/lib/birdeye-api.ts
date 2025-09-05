@@ -292,7 +292,7 @@ class BirdeyeAPI {
   private cache = new RequestCache();
   private rateLimitConfig = defaultRateLimitConfig;
   private lastRequestTime = 0;
-  private minRequestInterval = 500; // Minimum 500ms between requests
+  private minRequestInterval = 2000; // Minimum 2 seconds between requests
 
   private async sleep(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
