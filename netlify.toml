@@ -1,8 +1,8 @@
 [images]
-  remote_images = ["https://source.unsplash.com/.*", "https://images.unsplash.com/.*", "https://ext.same-assets.com/.*", "https://ugc.same-assets.com/.*"]
+  remote_images = ["https://source.unsplash.com/.*", "https://images.unsplash.com/.*", "https://ext.same-assets.com/.*", "https://ugc.same-assets.com/.*", "https://fal.media/.*", "https://v2.fal.media/.*", "https://storage.fal.ai/.*"]
 
 [build]
-  command = "bun run build"
+  command = "npm run build"
   publish = ".next"
 
 [build.environment]
@@ -16,3 +16,31 @@
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
+
+# Redirects for SPA routing
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+  conditions = {Role = ["admin"]}
+
+# Headers for AI generation features
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    # Allow AI generation APIs
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: blob:; connect-src 'self' https://api.fal.ai https://queue.fal.run https://fal.media https://v2.fal.media https://storage.fal.ai https://openrouter.ai https://api.x.ai https://public-api.birdeye.so https://mainnet.helius-rpc.com https://devnet.helius-rpc.com; media-src 'self' https: blob:; object-src 'none'; frame-src 'none';"
+
+# Environment-specific settings
+[context.production.environment]
+  NEXT_PUBLIC_SOLANA_NETWORK = "mainnet"
+
+[context.deploy-preview.environment]
+  NEXT_PUBLIC_SOLANA_NETWORK = "devnet"
+
+[context.branch-deploy.environment]
+  NEXT_PUBLIC_SOLANA_NETWORK = "devnet"
