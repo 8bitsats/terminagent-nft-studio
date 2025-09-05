@@ -1,26 +1,26 @@
 'use client';
 
 import React, {
-  useState,
-  useEffect,
   useCallback,
+  useEffect,
+  useState,
 } from 'react';
 
 import {
-  TrendingUp,
-  Search,
-  BarChart3,
   Activity,
-  Wallet,
-  Globe,
-  Zap,
+  BarChart3,
   DollarSign,
-  Sparkles,
+  Globe,
   RefreshCw,
+  Search,
+  Sparkles,
+  TrendingUp,
+  Zap,
 } from 'lucide-react';
 
-import TrendingTokens from '@/components/TrendingTokens';
 import MemeTokens from '@/components/MemeTokens';
+import PumpFunMonitor from '@/components/PumpFunMonitor';
+import TrendingTokens from '@/components/TrendingTokens';
 import { birdeyeAPI } from '@/lib/birdeye-api';
 import {
   formatNumber,
@@ -296,6 +296,9 @@ export default function BlockchainExplorer() {
 
         {/* Main Content */}
         <div className="space-y-8">
+          {/* PumpFun Live Monitor */}
+          <PumpFunMonitor />
+          
           {/* Trending Tokens */}
           <TrendingTokens limit={20} />
           
