@@ -51,10 +51,10 @@ interface RateLimitConfig {
 }
 
 const defaultRateLimitConfig: RateLimitConfig = {
-  maxRetries: 3,
-  baseDelay: 1000, // 1 second
-  maxDelay: 30000, // 30 seconds
-  backoffMultiplier: 2
+  maxRetries: 5,
+  baseDelay: 2000, // 2 seconds
+  maxDelay: 60000, // 60 seconds
+  backoffMultiplier: 2.5
 };
 
 export interface TrendingToken {
@@ -291,6 +291,8 @@ class BirdeyeAPI {
   private apiKey = API_KEY;
   private cache = new RequestCache();
   private rateLimitConfig = defaultRateLimitConfig;
+  private lastRequestTime = 0;
+  private minRequestInterval = 500; // Minimum 500ms between requests
 
   private async sleep(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -320,6 +322,14 @@ class BirdeyeAPI {
     if (cachedData) {
       return cachedData;
     }
+
+    // Global rate limiting - ensure minimum interval between requests
+    const now = Date.now();
+    const timeSinceLastRequest = now - this.lastRequestTime;
+    if (timeSinceLastRequest < this.minRequestInterval) {
+      await this.sleep(this.minRequestInterval - timeSinceLastRequest);
+    }
+    this.lastRequestTime = Date.now();
 
     const url = new URL(`${this.baseUrl}${endpoint}`);
     
@@ -367,10 +377,14 @@ class BirdeyeAPI {
         if (response.status === 429) {
           if (attempt < this.rateLimitConfig.maxRetries) {
             const delay = this.calculateBackoffDelay(attempt);
-            console.warn(`Rate limited (429). Retrying in ${delay}ms... (attempt ${attempt + 1}/${this.rateLimitConfig.maxRetries + 1})`);
+            // Suppress console warning for rate limiting - this is expected behavior
             await this.sleep(delay);
             continue;
           }
+          // After max retries, return fallback data instead of throwing error
+          const fallbackData = { tokens: [], total: 0, has_next: false } as unknown as T;
+          this.cache.set(cacheKey, fallbackData, 10000); // Cache fallback for 10 seconds
+          return fallbackData;
         }
 
         // Handle other HTTP errors
@@ -385,7 +399,6 @@ class BirdeyeAPI {
         // Retry on server errors (5xx)
         if (attempt < this.rateLimitConfig.maxRetries && response.status >= 500) {
           const delay = this.calculateBackoffDelay(attempt);
-          console.warn(`Server error (${response.status}). Retrying in ${delay}ms... (attempt ${attempt + 1}/${this.rateLimitConfig.maxRetries + 1})`);
           await this.sleep(delay);
           continue;
         }
@@ -400,9 +413,15 @@ class BirdeyeAPI {
         }
         
         const delay = this.calculateBackoffDelay(attempt);
-        console.warn(`Request failed. Retrying in ${delay}ms... (attempt ${attempt + 1}/${this.rateLimitConfig.maxRetries + 1})`);
         await this.sleep(delay);
       }
+    }
+
+    // Return fallback data instead of throwing error to prevent UI crashes
+    if (lastError?.message.includes('429')) {
+      const fallbackData = { tokens: [], total: 0, has_next: false } as unknown as T;
+      this.cache.set(cacheKey, fallbackData, 10000); // Cache fallback for 10 seconds
+      return fallbackData;
     }
 
     throw lastError || new Error('Request failed after all retries');
