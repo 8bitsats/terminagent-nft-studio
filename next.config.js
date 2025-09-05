@@ -7,8 +7,9 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  experimental: {
-    forceSwcTransforms: true,
+  devIndicators: {
+    appIsrStatus: false,
+    buildActivity: false,
   },
   allowedDevOrigins: ["*.preview.same-app.com"],
   images: {

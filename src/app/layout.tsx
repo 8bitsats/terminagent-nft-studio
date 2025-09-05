@@ -58,8 +58,8 @@ export default function RootLayout({
         <script 
           src="https://unpkg.com/@elevenlabs/convai-widget-embed" 
           async 
-          type="text/javascript"
-        />
+          type="text/javascript">
+        </script>
       </body>
     </html>
   );

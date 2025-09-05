@@ -51,10 +51,10 @@ interface RateLimitConfig {
 }
 
 const defaultRateLimitConfig: RateLimitConfig = {
-  maxRetries: 5,
-  baseDelay: 2000, // 2 seconds
-  maxDelay: 60000, // 60 seconds
-  backoffMultiplier: 2.5
+  maxRetries: 3,
+  baseDelay: 5000, // 5 seconds
+  maxDelay: 120000, // 2 minutes
+  backoffMultiplier: 3
 };
 
 export interface TrendingToken {
